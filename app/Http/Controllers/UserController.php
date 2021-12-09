@@ -6,6 +6,7 @@ use App\Http\Requests\ForgetPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UserRequest;
+use App\Http\Resources\UserResource;
 use App\Models\Password_reset;
 use App\Models\User;
 use App\Service\jwtservice as ServiceJwtservice;
@@ -14,6 +15,9 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use Illuminate\Http\File;
+
+
 
 class UserController extends Controller
 {
@@ -28,21 +32,34 @@ class UserController extends Controller
             $signinUserData->email = $validated["email"];
             $signinUserData->password = $validated["password"];
             $signinUserData->age = $validated["age"];
-            $signinUserData->profilePicture = 'storage/path/public/user.jpg';
+            $signinUserData->profilePicture = url("storage").'/images/user.jpg';
+            $signinUserData->verify = 0;
             if($validated["profilePicture"])
             {
+                // $image = base64_decode($validated["profilePicture"]);  // your base64 encoded
+                //  dd($image);
+                //  $imageName = Str::random(10) ."." .$image->getClientOriginalExtension();
+                //  $path = $files->storeAs('images',$filename,'public');
+                //  Storage::disk('local')->put($imageName, base64_decode($image));
                  $image = $validated["profilePicture"];  // your base64 encoded
                  $imageName = Str::random(10) . '.jpg';
-                 $path = 'storage/path/public/'.$imageName;
-                 Storage::disk('local')->put($imageName, base64_decode($image));
+                 $path = public_path().'//storage//images//'.$imageName;
+                 file_put_contents($path,base64_decode($image));
+                 $path = $imageName;
                  $signinUserData->profilePicture = $path;
             }
             $signinUserData->save();
-            return response()->json(["message"=>"SignUp Successfully"],201);
+            $user = [
+                'name' => $validated['name'],
+                'info' => 'Press the Following Link to Verify Email',
+                'Verification_link'=>url('user/verifyEmail/'.$validated['email'])
+            ];
+           dispatch(new \App\Jobs\SendEmailJob($validated['email'],$user));
+            return response()->success("SignUp Successfully",200);
         }
         catch(Exception $e)
         {
-            return response()->json($e->getMessage(),404);
+            return response()->error($e->getMessage(),403);
         }
     }
     public function login(LoginRequest $request)
@@ -50,38 +67,44 @@ class UserController extends Controller
         try
         {
             $validated = $request->validated();
+
             if($user = User::where("email",$validated["email"])->first())
             {
-
-            }
-            else
+                if(Hash::check($validated["password"], $user->password))
             {
-                return response()->json("Error invalid email");
-            }
-            if(Hash::check($validated["password"], $user->password))
-            {
+                if($user->verify)
+                {
                 $data = [
                     "id"=>$user->_id,
                     "email"=>$validated["email"],
                     "password"=>$validated["password"],
                     "age"=>$user->age
                 ];
-                //dd($user);
                 $jwt = (new ServiceJwtservice)->jwt_encode($data);
                 $user->remember_token = $jwt;
                 $user->save();
                 $user = array_merge($user->toArray(),array("password"=>$validated["password"]));
-                // $user->save();
-                return response()->json($user,200);
+                return response()->success($user,200);
+                }
+                else
+                {
+                    return response()->error('Account not verified',400);
+                }
             }
             else
             {
                 throw new Exception("Password is wrong");
             }
+            }
+            else
+            {
+                throw new Exception("Error invalid email");
+            }
+
         }
         catch(Exception $e)
         {
-            return response()->json($e->getMessage(),404);
+            return response()->error($e->getMessage(),404);
         }
     }
     public function forgetPassword(ForgetPasswordRequest $request)
@@ -95,16 +118,16 @@ class UserController extends Controller
             $resetPassword->save();
             $data = ['Verification_link'=>url('user/'.$resetPassword->email.'/'.$resetPassword->token)];
             \Mail::to($request->email)->send(new \App\Mail\MyTestMail($data));
-            return response()->json("Password reset mail has been sent",200);
+            return response()->success("Password reset mail has been sent",200);
         }
         else
         {
-            return response()->json("Email Does not exist");
+            throw new Exception("Email Does not exist");
         }
            }
            catch(Exception $e)
            {
-               return response()->json($e->getMessage());
+               return response()->error($e->getMessage());
            }
     }
     public function updatepassword(UpdatePasswordRequest $request,$email,$token)
@@ -119,16 +142,17 @@ class UserController extends Controller
             $validated['password'] = bcrypt($validated['password']);
             $user->password =$validated['password'];
             $user->save();
-            return response()->json("Password Updated",200);
+
+            return response()->success("Password Updated",200);
         }
         else
         {
-            return response()->json("Unauthorized",404);
+            return response()->error("Unauthorized",404);
         }
            }
            catch(Exception $e)
            {
-               return response()->json($e->getMessage(),404);
+               return response()->error($e->getMessage(),404);
            }
     }
     public function updateuser(UserRequest $request)
@@ -152,12 +176,74 @@ class UserController extends Controller
             {
                 $user->name = $validated['age'];
             }
+            if($request->hasFile('profilePicture'))
+            {
 
-            $user->save();
-            $m = [
-                "status"=>"success",
-                "message"=>"profile updated"
+                $before=$user['profilePicture'];
+                if($before == "images/user.jpg")
+                {
+                    $pic = $request->profile_picture;
+                    $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                    $extension = $pic->getClientOriginalExtension();
+                    $check = in_array($extension,$allowedfileExtension);
+                    if($check) {
+                            $path = $pic->store('public');
+                    } else {
+                        throw new Exception('invalid_file_format');
+                    }
+                }
+                else
+                {
+                    $pic = $request->profile_picture;
+                    $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                    $extension = $pic->getClientOriginalExtension();
+                    Storage::delete($before);
+                    $check = in_array($extension,$allowedfileExtension);
+                    if($check) {
+                            $path = $pic->store('public/profile');
+
+                    } else {
+                        throw new Exception('invalid_file_format');
+                    }
+                }
+            }
+            $data = [
+                "id"=>$user->_id,
+                "email"=>$validated["email"],
+                "password"=>$validated["password"],
+                "age"=>$user->age
             ];
-            return response()->json($m,201);
-    }
+            $jwt = (new ServiceJwtservice)->jwt_encode($data);
+            $user->remember_token = $jwt;
+            $user->save();
+            $data = [
+                'token'=>$jwt,
+                'message'=>'profile Updated'
+            ];
+            return response()->success([$data],201);
+
+        }
+    public function verify($email)
+            {
+                if(User::where("email",$email)->value('verify') == 1)
+                {
+                    $m = ["You have already verified your account"];
+                    return response()->error($m,404);
+                }
+                else
+                {
+                    $update=User::where("email",$email)->update(["verify"=>1]);
+                    if($update){
+                        return response()->success("Account verified",200);
+                    }else{
+                        return response()->error("Failed",400);
+                    }
+                }
+            }
+            public function resource(Request $request)
+            {
+                $decoded = $request->decoded;
+                $user = User::find($decoded->data->id);
+                return new UserResource($user);
+            }
 }

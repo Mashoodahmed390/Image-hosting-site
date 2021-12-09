@@ -23,22 +23,29 @@ class JwtMiddleware
     public function handle(Request $request, Closure $next)
     {
 
-        $key = "example_key";
+        $key = config('constant.secret');
         JWT::$leeway = 60;
         try {
             $decoded = JWT::decode($request->bearerToken(), new Key($key, 'HS256'));
-            $user=User::where('email',$decoded->email)->first();
+            $user=User::where('email',$decoded->data->email)->first();
+            if($user->verify==1)
+            {
+                //dd(isset($user));
                 if(!isset($user))
                 {
                     return response()->json(['status' => 'Not a valid user token']);
                 }
                 else
                 {
-                    if (!Hash::check($decoded->password, $user->password)) {
+                    if (!Hash::check($decoded->data->password, $user->password)) {
                         return response()->json(['status' => 'Not a valid user token']);
                     }
                 }
-
+            }
+            else
+            {
+                return response()->json(['error' => 'Please verify the link first'], 401);
+            }
 
         } catch (Exception $e) {
             if ($e instanceof \Firebase\JWT\SignatureInvalidException){
@@ -46,7 +53,7 @@ class JwtMiddleware
             }else if ($e instanceof \Firebase\JWT\ExpiredException){
                 return response()->error(['status' => 'Token is Expired'],401);
             }else{
-                return response()->error(['status' => "Authorization Token not found"],400);
+                return response()->error(['status' => 'Token Not Found'],400);
             }
         }
         $request = $request->merge(array("decoded"=>$decoded));

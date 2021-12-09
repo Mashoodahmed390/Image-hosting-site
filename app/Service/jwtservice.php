@@ -10,8 +10,7 @@ class jwtservice
 {
     public function jwt_encode($data)
     {
-        //$key = "example_key";
-        $key = config('contants.secret');
+        $key = config('constant.secret');
         $payload= array(
             "iss" => "http://localhost.com",
             "aud" => "http://localhost.com",
@@ -32,7 +31,7 @@ class jwtservice
     }
     public function jwt_decode($token)
          {
-        $secret_key = config('contants.secret');
+        $secret_key = config('constant.secret');
         $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
         return $decoded;
     }

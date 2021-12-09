@@ -25,8 +25,8 @@ return [
     |
     */
 
-    'secret' => env('JWT_SECRET'),
-     //'secret' => "example_key",
+    //'secret' => env('JWT_SECRET'),
+     'secret' => "example_key",
 
     /*
     |--------------------------------------------------------------------------

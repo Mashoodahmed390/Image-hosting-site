@@ -20,6 +20,7 @@ class CreateUsersTable extends Migration
             $table->string("profilePicture")->default("user.png");
             $table->string('password');
             $table->rememberToken();
+            $table->boolean('verify')->default('0');
             $table->timestamps();
         });
     }

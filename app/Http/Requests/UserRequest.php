@@ -27,9 +27,9 @@ class UserRequest extends FormRequest
     {
         return [
             'name' => 'required|string|between:3,32',
-            'email' => 'required|email',
-            'password'=> 'required|confirmed|string|min:8|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
-            'age'=>'numeric|between:10,100',
+            'email' => 'required|email|exists:users',
+            'password'=> 'required|confirmed|string|min:8|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!.%*#?&]/',
+            'age'=>'required|numeric|between:10,100',
             'profilePicture'=>'nullable'
         ];
     }
