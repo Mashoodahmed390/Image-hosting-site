@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\Photo;
-use App\Models\Sharephoto;
+use App\Models\User;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -18,25 +20,32 @@ class PhotoMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        // if($photos = Photo::select("path")->where("privacy","public")->get()->toArray())
-        // {
-        //     $index = 0;
-        //     foreach($photos as $photo)
-        //     {
-        //         $data[$index]["_id"] = $photo["_id"];
-        //         $data[$index]["path"] = $photo["path"];
-        //         $index++;
-        //     }
-        // }
-        // $request = $request->merge(array("Photodata"=>$data));
-        //return $next($request);
-        // if($photos = Sharephoto::where("privacy","private")->get()->toArray())
-        // {
-
-        // }
-        // else
-        // {
-        return $next($request);
-       // }
+        $image=Photo::where('attachment',strval($request->filename))->first();
+            if($image->privacy=='private'){
+                if(!empty(request()->bearerToken()))
+                {
+                    $decoded = JWT::decode(request()->bearerToken(), new Key(config('constant.secret'), 'HS256'));
+                    // $token_exist= DB::select("select * from auth_token where user_id='{$decoded->data->id}'");
+                    $token_exist = User::find($decoded->data->id);
+                    if($token_exist){
+                            $email=explode(',',$image->share_with);
+                            if (in_array($decoded->data->email,$email))
+                            {
+                                request()->merge(['image'=>$image]);
+                                return $next($request);
+                            }
+                    }else{
+                        return response()->error('You are not Authorized',404);
+                    }
+                }
+            }
+            if ($image->visibility=='public')
+            {
+                request()->merge(['image'=>$image]);
+                return $next($request);
+            }else
+            {
+                return response()->error('You are not Authorized',404);
+            }
     }
 }

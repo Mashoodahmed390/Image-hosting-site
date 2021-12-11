@@ -34,7 +34,7 @@ class PhotoController extends Controller
             $photo = new Photo();
             $photo->path = $path;
             $photo->shareablelink = url("storage")."/images/".$imageName;
-            $photo->privacy = "public";
+            $photo->privacy = "hidden";
             $photo->extension = $ext[1];
             $photo->user()->associate($decoded->data->id);
             $photo->save();
@@ -124,9 +124,62 @@ class PhotoController extends Controller
             return response()->error($e->getMessage(),400);
         }
     }
-    public function photoshare(Request $request,$photo_id)
+    public function makingimageprivateorpublic(Request $request,$photo_id)
     {
         $photo = Photo::where('_id',$photo_id)->first();
-        return response()->file($photo->shareablelink);
+        if($photo)
+        {
+        $photo->privacy = $request->privacy;
+        return response()->success("privacy changed",201);
+        }
+        else
+        {
+            return response()->error("Not such image found",400);
+        }
+    }
+    public function search(Request $request)
+    {
+        $decoded = $request->decoded;
+        $user = User::where('_id',$decoded->data->id)->first();
+        try {
+            $image = Photo::where('user_id',$user->id);
+            if($request->has('date'))
+            {
+               $image=$image->where('updated_at','like',date($request->date)."%");
+            }
+            if($request->has('time'))
+            {
+                $image=$image->where('updated_at','like',"%".date($request->time));
+            }
+            if($request->has('name'))
+            {
+                $image=$image->where('name',$request->name);
+            }
+            if($request->has('extension'))
+            {
+                $image=$image->where('extension',$request->extension);
+            }
+            if($request->has('privacy'))
+            {
+                $image=$image->where('privacy',$request->privacy);
+            }
+            if($request->has('hidden'))
+            {
+                $image=$image->where('hidden',$request->hidden);
+            }
+            $image=$image->get();
+            if(!empty($image))
+            {
+                return response()->success($image,200);
+            }
+            else{
+                throw new Exception('Image Not Found');
+            }
+
+        } catch (Exception $e) {
+
+            return response()->error($e->getMessage(),404);
+        }
+
     }
 }

@@ -21,5 +21,6 @@ Route::post('upload',[PhotoController::class,'uploadPhoto']);
 Route::delete('delete/{photo_id}',[PhotoController::class,'deletePhoto']);
 Route::put('update/{photo_id}',[PhotoController::class,'imageUpdate']);
 Route::get('display/all/picture',[PhotoController::class,'displayallpicture']);
-Route::get('private/{photo_id}',[PhotoController::class,'photoshare']);
+Route::post('visibility/{photo_id}',[PhotoController::class,'makingimageprivateorpublic']);
+// Route::get('private/{photo_id}',[PhotoController::class,'photoshare']);
 });

@@ -38,18 +38,20 @@ class UserController extends Controller
             $signinUserData->verify = 0;
             if($validated["profilePicture"])
             {
-                // $image = base64_decode($validated["profilePicture"]);  // your base64 encoded
-                //  dd($image);
-                //  $imageName = Str::random(10) ."." .$image->getClientOriginalExtension();
-                //  $path = $files->storeAs('images',$filename,'public');
-                //  Storage::disk('local')->put($imageName, base64_decode($image));
-
-                 $image = $validated["profilePicture"];  // your base64 encoded
-                 $imageName = Str::random(10) . '.jpg';
-                 $path = public_path().'//storage//images//'.$imageName;
-                 file_put_contents($path,base64_decode($image));
-                //  $signinUserData->shareablelink = url('storage')."/images/".$imageName;
-                 $signinUserData->profilePicture = $path;
+                $base64encode = $validated['profilePicture'];
+                $pos  = strpos($base64encode, ';');
+                $replace = substr($base64encode, 0, strpos($base64encode, ',')+1);
+                $image = str_replace($replace, '', $base64encode);
+                $type = explode(':', substr($base64encode, 0, $pos))[1];
+                $ext=explode('/',$type);
+                $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                $check = in_array($ext[1],$allowedfileExtension);
+                if($check)
+                {
+                $imageName = Str::random(10) .".".$ext[1];
+                $path = public_path().'//storage//images//'.$imageName;
+                file_put_contents($path,base64_decode($image));
+                }
             }
             $signinUserData->save();
             $user = [
@@ -181,32 +183,45 @@ class UserController extends Controller
             }
             if($request->hasFile('profilePicture'))
             {
-
                 $before=$user['profilePicture'];
-                if($before == "images/user.jpg")
+                if($before == "C:\\xampp\htdocs\Image-hosting-site\public//storage//images//user.jpg")
                 {
-                    $pic = $request->profile_picture;
-                    $allowedfileExtension=['pdf','jpg','png','jpeg'];
-                    $extension = $pic->getClientOriginalExtension();
-                    $check = in_array($extension,$allowedfileExtension);
-                    if($check) {
-                            $path = $pic->store('public');
-                    } else {
-                        throw new Exception('invalid_file_format');
-                    }
+                $base64encode = $validated['profilePicture'];
+                $pos  = strpos($base64encode, ';');
+                $replace = substr($base64encode, 0, strpos($base64encode, ',')+1);
+                $image = str_replace($replace, '', $base64encode);
+                $type = explode(':', substr($base64encode, 0, $pos))[1];
+                $ext=explode('/',$type);
+                $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                $check = in_array($ext[1],$allowedfileExtension);
+                if($check)
+                {
+                $imageName = Str::random(10) .".".$ext[1];
+                $path = public_path().'//storage//images//'.$imageName;
+                file_put_contents($path,base64_decode($image));
+                }
+                else{
+                    throw new Exception("invalid_picture_format");
+                }
                 }
                 else
                 {
-                    $pic = $request->profile_picture;
+                    $base64encode = $validated['profilePicture'];
+                    $pos  = strpos($base64encode, ';');
+                    $replace = substr($base64encode, 0, strpos($base64encode, ',')+1);
+                    $image = str_replace($replace, '', $base64encode);
+                    $type = explode(':', substr($base64encode, 0, $pos))[1];
+                    $ext=explode('/',$type);
                     $allowedfileExtension=['pdf','jpg','png','jpeg'];
-                    $extension = $pic->getClientOriginalExtension();
-                    Storage::delete($before);
-                    $check = in_array($extension,$allowedfileExtension);
-                    if($check) {
-                            $path = $pic->store('public/profile');
-
-                    } else {
-                        throw new Exception('invalid_file_format');
+                    $check = in_array($ext[1],$allowedfileExtension);
+                    if($check)
+                    {
+                    $imageName = Str::random(10) .".".$ext[1];
+                    $path = public_path().'//storage//images//'.$imageName;
+                    file_put_contents($path,base64_decode($image));
+                    }
+                    else{
+                        throw new Exception("invalid_picture_format");
                     }
                 }
             }
