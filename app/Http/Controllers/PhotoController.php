@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PhotoRequest;
 use App\Models\Photo;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class PhotoController extends Controller
@@ -30,11 +32,13 @@ class PhotoController extends Controller
             //$path = $files->storeAs('images',$filename,'public');
             //store image file into directory and db
             $photo = new Photo();
-            $photo->path = url("storage")."/images/".$imageName;
+            $photo->path = $path;
+            $photo->shareablelink = url("storage")."/images/".$imageName;
             $photo->privacy = "public";
+            $photo->extension = $ext[1];
             $photo->user()->associate($decoded->data->id);
             $photo->save();
-            $m=["message"=>"picture uploaded successfully"];
+            $m=["message"=>"picture uploaded successfully","image_detail"=>$photo];
             return response()->success($m,201);
             }
            }
@@ -43,11 +47,12 @@ class PhotoController extends Controller
                return response()->error($e->getMessage(),400);
            }
     }
-    public function deletePhoto(PhotoRequest $request)
+    public function deletePhoto(Request $request,$photo_id)
     {
         try
         {
-           $photo = Photo::where('_id',$request->id)->first();
+           $photo = Photo::where('_id',$photo_id)->first();
+           File::delete($photo->path);
            $photo->delete();
            return response()->success("Photo deleted successfully",201);
         }
@@ -56,26 +61,72 @@ class PhotoController extends Controller
             return response()->error($e,403);
         }
     }
-    public function displayallpicture(Request $request,$image)
+    public function imageUpdate(Request $request,$photo_id)
+    {
+        $decoded = $request->decoded;
+        $user = User::where('_id',$decoded->data->id)->first();
+        try {
+            $photo = Photo::where('_id',$photo_id)->where('user_id',$user->id)->first();
+            if(isset($photo))
+            {
+                if($request->has('image'))
+                {
+                    File::delete($photo->path);
+                    $base64encode = $request->image;
+                    $pos  = strpos($base64encode, ';');
+                    $replace = substr($base64encode, 0, strpos($base64encode, ',')+1);
+                    $image = str_replace($replace, '', $base64encode);
+                    $type = explode(':', substr($base64encode, 0, $pos))[1];
+                    $ext=explode('/',$type);
+                    $image = str_replace(' ', '+', $image);
+                    $imageName = Str::random(10).'.'.$ext[1];
+                    $shareablelink = url('storage/images/'.$imageName);
+                    $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                    $check = in_array($ext[1],$allowedfileExtension);
+                    if($check)
+                    {
+                    $path = public_path().'//storage//images//'.$imageName;
+                    file_put_contents($path,base64_decode($image));
+                    }
+                    else{
+                        throw new Exception('Invalid image format');
+                    }
+
+                        $data['path'] = $path;
+                        $data['shareablelink'] = $shareablelink;
+                        $data['extension'] = $ext[1];
+                }
+                if($request->has('privacy'))
+                {
+                        $data['privacy']=$request->privacy;
+                }
+                $photo->update($data);
+                return response()->success('Image updated successfully',200);
+            }
+            else{
+                throw new Exception('Image Not Found');
+            }
+
+        } catch (Exception $e) {
+
+            return response()->error($e->getMessage(),404);
+        }
+    }
+    public function displayallpicture(Request $request)
     {
         try
         {
-        $path = url("storage")."/images/".$image;
-        $photo = Photo::select("path")->where("path",$path)->first();
-        // $photos = Photo::select("path")->get()->toArray();
-        // $photo_path_url=url('storage');
-        // $index=0;
-        // foreach($photos as $photo)
-        // {
-        //     $data[$index]["id"]= $photo["_id"];
-        //     $data[$index]["path"]= $photo_path_url."/".$photo["path"];
-        //     $index++;
-        // }
+        $photo = Photo::select("shareablelink")->where("privacy","public")->get();
         return response()->success($photo,200);
         }
         catch(Exception $e)
         {
             return response()->error($e->getMessage(),400);
         }
+    }
+    public function photoshare(Request $request,$photo_id)
+    {
+        $photo = Photo::where('_id',$photo_id)->first();
+        return response()->file($photo->shareablelink);
     }
 }

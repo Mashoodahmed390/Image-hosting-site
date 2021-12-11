@@ -21,6 +21,9 @@ header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Headers: *');
 header('Access-Control-Allow-Method: *');
 
+Route::get('/test',function(){
+    dd("test");
+});
 Route::post('signup', [UserController::class,'signup']);
 Route::post('login', [UserController::class,'login']);
 Route::post('forgetpassword', [UserController::class,'forgetpassword']);

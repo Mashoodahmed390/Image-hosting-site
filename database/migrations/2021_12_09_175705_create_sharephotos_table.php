@@ -14,8 +14,9 @@ class CreateSharephotosTable extends Migration
     public function up()
     {
         Schema::create('sharephotos', function (Blueprint $table) {
-            $table->string("user_id");
-            $table->id("photo_id");
+            $table->string("person_given_access_id");
+            $table->string("person_email");
+            $table->string("photo_id");
             $table->timestamps();
         });
     }

@@ -25,6 +25,7 @@ class UserController extends Controller
     {
         try
         {
+           // dd("hit");
             $validated = $request->validated();
             $validated['password'] = bcrypt($validated['password']);
             $signinUserData = New User();
@@ -32,7 +33,8 @@ class UserController extends Controller
             $signinUserData->email = $validated["email"];
             $signinUserData->password = $validated["password"];
             $signinUserData->age = $validated["age"];
-            $signinUserData->profilePicture = url("storage").'/images/user.jpg';
+            $signinUserData->profilePicture = "C:\\xampp\htdocs\Image-hosting-site\public//storage//images//user.jpg";
+            // $signinUserData->shareablelink = url('storage')."/images/".'user.jpg';
             $signinUserData->verify = 0;
             if($validated["profilePicture"])
             {
@@ -41,11 +43,12 @@ class UserController extends Controller
                 //  $imageName = Str::random(10) ."." .$image->getClientOriginalExtension();
                 //  $path = $files->storeAs('images',$filename,'public');
                 //  Storage::disk('local')->put($imageName, base64_decode($image));
+
                  $image = $validated["profilePicture"];  // your base64 encoded
                  $imageName = Str::random(10) . '.jpg';
                  $path = public_path().'//storage//images//'.$imageName;
                  file_put_contents($path,base64_decode($image));
-                 $path = $imageName;
+                //  $signinUserData->shareablelink = url('storage')."/images/".$imageName;
                  $signinUserData->profilePicture = $path;
             }
             $signinUserData->save();

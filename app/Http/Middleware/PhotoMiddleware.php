@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Photo;
+use App\Models\Sharephoto;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -29,10 +30,13 @@ class PhotoMiddleware
         // }
         // $request = $request->merge(array("Photodata"=>$data));
         //return $next($request);
-        if($photos = Photo::where("privacy","private")->get()->toArray())
-        {
+        // if($photos = Sharephoto::where("privacy","private")->get()->toArray())
+        // {
 
-        }
+        // }
+        // else
+        // {
         return $next($request);
+       // }
     }
 }

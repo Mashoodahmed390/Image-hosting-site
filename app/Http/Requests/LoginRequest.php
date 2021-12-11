@@ -37,6 +37,6 @@ class LoginRequest extends FormRequest
                 'status'=> false,
                 'message'=> 'Validation error',
                 'data'=> $v->errors()
-            ]));
+            ],400));
         }
 }

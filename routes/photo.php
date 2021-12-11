@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['Jwt'])->group(function (){
 Route::post('upload',[PhotoController::class,'uploadPhoto']);
-Route::delete('delete',[PhotoController::class,'deletePhoto']);
-Route::get('display/all/picture',[PhotoController::class,'displayallpicture'])->middleware("publicPhoto");
-Route::get('storage/images',[PhotoController::class,'displayallpicture'])->middleware("publicPhoto");
+Route::delete('delete/{photo_id}',[PhotoController::class,'deletePhoto']);
+Route::put('update/{photo_id}',[PhotoController::class,'imageUpdate']);
+Route::get('display/all/picture',[PhotoController::class,'displayallpicture']);
+Route::get('private/{photo_id}',[PhotoController::class,'photoshare']);
 });
