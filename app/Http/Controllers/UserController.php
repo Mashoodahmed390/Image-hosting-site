@@ -25,7 +25,6 @@ class UserController extends Controller
     {
         try
         {
-           // dd("hit");
             $validated = $request->validated();
             $validated['password'] = bcrypt($validated['password']);
             $signinUserData = New User();
@@ -51,6 +50,7 @@ class UserController extends Controller
                 $imageName = Str::random(10) .".".$ext[1];
                 $path = public_path().'//storage//images//'.$imageName;
                 file_put_contents($path,base64_decode($image));
+                $signinUserData->profilePicture = $path;
                 }
             }
             $signinUserData->save();
@@ -171,7 +171,7 @@ class UserController extends Controller
             }
             if($request->has('email'))
             {
-                $user->name = $validated['name'];
+                $user->name = $validated['email'];
             }
             if($request->has('password'))
             {
@@ -199,6 +199,7 @@ class UserController extends Controller
                 $imageName = Str::random(10) .".".$ext[1];
                 $path = public_path().'//storage//images//'.$imageName;
                 file_put_contents($path,base64_decode($image));
+                $user->profilePicture = $path;
                 }
                 else{
                     throw new Exception("invalid_picture_format");
@@ -219,6 +220,7 @@ class UserController extends Controller
                     $imageName = Str::random(10) .".".$ext[1];
                     $path = public_path().'//storage//images//'.$imageName;
                     file_put_contents($path,base64_decode($image));
+                    $user->profilePicture = $path;
                     }
                     else{
                         throw new Exception("invalid_picture_format");

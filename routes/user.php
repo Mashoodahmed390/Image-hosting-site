@@ -30,6 +30,6 @@ Route::put('updatepassword/{email}/{token}', [UserController::class,'updatepassw
 Route::get('/verifyEmail/{email}', [UserController::class,'verify']);
 
 Route::middleware(['Jwt'])->group(function (){
-Route::put('update/user', [UserController::class,'updateuser']);
+Route::put('update', [UserController::class,'updateuser']);
 Route::get('dashboard', [UserController::class,'resource']);
 });

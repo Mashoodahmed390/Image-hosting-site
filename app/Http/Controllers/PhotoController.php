@@ -9,6 +9,8 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Illuminate\Validation\UnauthorizedException;
+use PhpParser\Node\Stmt\ElseIf_;
 
 class PhotoController extends Controller
 {
@@ -163,6 +165,16 @@ class PhotoController extends Controller
         {
             return response()->error($e->getMessage(),404);
         }
-
+    }
+    public function getshareablelink(Request $request,$photo_id)
+    {
+        $decoded = $request->decoded;
+        if($photo = Photo::where([["_id",$photo_id],["user_id",$decoded->data->id]])->first())
+        {
+        return response()->success($photo->shareablelink,200);
+        }
+        else{
+            return response()->error("Unauthorized",404);
+        }
     }
 }
