@@ -143,18 +143,6 @@ class PhotoController extends Controller
         $user = User::where('_id',$decoded->data->id)->first();
         try {
             $image = Photo::where('user_id',$user->id);
-            if($request->has('date'))
-            {
-               $image=$image->where('updated_at','like',date($request->date)."%");
-            }
-            if($request->has('time'))
-            {
-                $image=$image->where('updated_at','like',"%".date($request->time));
-            }
-            if($request->has('name'))
-            {
-                $image=$image->where('name',$request->name);
-            }
             if($request->has('extension'))
             {
                 $image=$image->where('extension',$request->extension);
@@ -163,21 +151,16 @@ class PhotoController extends Controller
             {
                 $image=$image->where('privacy',$request->privacy);
             }
-            if($request->has('hidden'))
-            {
-                $image=$image->where('hidden',$request->hidden);
-            }
             $image=$image->get();
             if(!empty($image))
             {
                 return response()->success($image,200);
             }
             else{
-                throw new Exception('Image Not Found');
+                throw new Exception('No such image found');
             }
-
-        } catch (Exception $e) {
-
+        } catch (Exception $e)
+        {
             return response()->error($e->getMessage(),404);
         }
 
