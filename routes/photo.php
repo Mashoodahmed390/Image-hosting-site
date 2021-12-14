@@ -24,5 +24,6 @@ Route::get('display/all/picture',[PhotoController::class,'displayallpicture']);
 Route::post('visibility/{photo_id}',[PhotoController::class,'makingimageprivateorpublic']);
 Route::post('search',[PhotoController::class,'search']);
 Route::get('shareablelink/{photo_id}',[PhotoController::class,'getshareablelink']);
+Route::get('accessphoto/{photo_id}',[PhotoController::class,'accessphoto']);
 // Route::get('private/{photo_id}',[PhotoController::class,'photoshare']);
 });

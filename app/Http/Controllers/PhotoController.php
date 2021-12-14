@@ -171,9 +171,40 @@ class PhotoController extends Controller
         $decoded = $request->decoded;
         if($photo = Photo::where([["_id",$photo_id],["user_id",$decoded->data->id]])->first())
         {
-        return response()->success($photo->shareablelink,200);
+            $photo->sharewith = $request->email;
+            $photo->save();
+        return response()->success("http://127.0.0.1:8000/photo/accessphoto/".$photo_id,200);
         }
         else{
+            return response()->error("Unauthorized",404);
+        }
+    }
+    public function accessphoto(Request $request,$photo_id)
+    {
+        $decoded = $request->decoded;
+        if($photo = Photo::where([["_id",$photo_id],["user_id",$decoded->data->id]])->first())
+        {
+            return view("photo")
+            ->with('photo',$photo->shareablelink);
+        }
+        if($photo = Photo::where([["_id",$photo_id],["privacy","hidden"],["user_id",$decoded->data->id]])->first())
+        {
+            return view("photo")
+            ->with('photo',$photo->shareablelink);
+        }
+        if($photo = Photo::where([["_id",$photo_id],["privacy","public"]])->first())
+        {
+            return view("photo")
+            ->with('photo',$photo->shareablelink);
+        }
+
+        if($photo = Photo::where([["_id",$photo_id],["sharewith",$decoded->data->email],["privacy","private"]])->first())
+        {
+            return view("photo")
+            ->with('photo',$photo->shareablelink);
+        }
+        else
+        {
             return response()->error("Unauthorized",404);
         }
     }
