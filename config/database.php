@@ -50,7 +50,7 @@ return [
 
         'mongodb' => [
             'driver' => 'mongodb',
-            'dsn' => env('DB_URI', 'mongodb+srv://mashood:kHMtMwxUzapY56E@cluster0.l9gwz.mongodb.net/imagehost?retryWrites=true&w=majority'),
+            'dsn' => env('DB_URI', 'mongodb+srv://mashood:kHMtMwxUzapY56E@cluster0.l9gwz.mongodb.net/image-host?retryWrites=true&w=majority'),
             'database' => 'image-host',
     ],
 
