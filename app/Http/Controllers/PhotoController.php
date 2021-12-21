@@ -28,8 +28,9 @@ class PhotoController extends Controller
             $check = in_array($ext[1],$allowedfileExtension);
             if($check)
             {
+                dd(public_path());
             $imageName = Str::random(10) .".".$ext[1];
-            $path = public_path().'//storage//images//'.$imageName;
+            $path = public_path().'//storage'.$imageName;
             file_put_contents($path,base64_decode($image));
             //$path = $files->storeAs('images',$filename,'public');
             //store image file into directory and db
@@ -181,6 +182,8 @@ class PhotoController extends Controller
     }
     public function accessphoto(Request $request,$photo_id)
     {
+        try
+        {
         $decoded = $request->decoded;
         if($photo = Photo::where([["_id",$photo_id],["user_id",$decoded->data->id]])->first())
         {
@@ -206,6 +209,11 @@ class PhotoController extends Controller
         else
         {
             return response()->error("Unauthorized",404);
+        }
+        }
+        catch(Exception $e)
+        {
+            return response()->error($e->getMessage(),400);
         }
     }
 }

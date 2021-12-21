@@ -48,8 +48,12 @@ class UserController extends Controller
                 if($check)
                 {
                 $imageName = Str::random(10) .".".$ext[1];
-                $path = public_path().'//storage//images//'.$imageName;
-                file_put_contents($path,base64_decode($image));
+                $url= $_SERVER['HTTP_HOST'];
+                $path='https://'.$url."/photo/storage/".$imageName;
+               // $path=storage_path('app\\photos').'\\'.$fileName;
+                Storage::disk('local')->put($imageName,base64_decode($image));
+                // $path = public_path().'//storage//images//'.$imageName;
+                // file_put_contents($path,base64_decode($image));
                 $signinUserData->profilePicture = $path;
                 }
             }
